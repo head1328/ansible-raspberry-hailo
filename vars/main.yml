@@ -1,0 +1,8 @@
+---
+
+_hailo_packages:
+  h8l: hailo-all
+  h8: hailo-all
+  h10: hailo-h10-all
+
+hailo_package: "{{ _hailo_packages[hailo_variant] }}"

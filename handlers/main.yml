@@ -1,0 +1,4 @@
+---
+
+- name: Reboot for Hailo
+  ansible.builtin.reboot:

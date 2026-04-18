@@ -1,0 +1,20 @@
+---
+
+argument_specs:
+  main:
+    short_description: "Main entrypoint for the hailo role"
+    author: Kevin Horst <info@kevinhorst.de>
+    options:
+      hailo_variant:
+        type: str
+        required: false
+        default: h10
+        choices:
+          - h8l
+          - h8
+          - h10
+        description:
+          - The Hailo device variant to install drivers for.
+          - "h8l: Hailo-8L (AI HAT+ 13 TOPS)"
+          - "h8: Hailo-8 (AI HAT+ 26 TOPS)"
+          - "h10: Hailo-10H (AI HAT+ 2, up to 40 TOPS)"

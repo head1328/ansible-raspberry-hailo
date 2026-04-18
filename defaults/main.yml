@@ -1,0 +1,4 @@
+---
+
+# Hailo device variant: "h8l", "h8", or "h10"
+hailo_variant: h10

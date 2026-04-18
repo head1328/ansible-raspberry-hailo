@@ -1,0 +1,20 @@
+---
+- name: Verify all packages are available
+  hosts: all
+  become: false
+  gather_facts: true
+
+  tasks:
+    - name: Verify hailo-h10-all is available in apt cache
+      ansible.builtin.command:
+        cmd: apt-cache show hailo-h10-all
+      changed_when: false
+      failed_when: h10_cache.rc != 0
+      register: h10_cache
+
+    - name: Verify hailo-all is available in apt cache
+      ansible.builtin.command:
+        cmd: apt-cache show hailo-all
+      changed_when: false
+      failed_when: h8_cache.rc != 0
+      register: h8_cache

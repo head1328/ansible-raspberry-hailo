@@ -1,0 +1,20 @@
+---
+
+- name: Install Hailo metapackage
+  ansible.builtin.apt:
+    name: "{{ hailo_package }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 86400
+  notify: Reboot for Hailo
+
+- name: Verify Hailo device is present
+  ansible.builtin.stat:
+    path: /dev/hailo0
+  register: hailo_device
+
+- name: Report Hailo device status
+  ansible.builtin.debug:
+    msg: >-
+      Hailo device {{ '/dev/hailo0 is present' if hailo_device.stat.exists
+      else 'not yet available, reboot required' }}

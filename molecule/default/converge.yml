@@ -1,0 +1,12 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  gather_facts: true
+
+  vars:
+    hailo_variant: h10
+
+  roles:
+    - role: ansible-raspberry-hailo
+      tags: hailo
