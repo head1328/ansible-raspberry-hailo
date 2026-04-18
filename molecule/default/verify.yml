@@ -1,0 +1,13 @@
+---
+- name: Verify
+  hosts: all
+  become: false
+  gather_facts: true
+
+  tasks:
+    - name: Verify hailo-h10-all is installed
+      ansible.builtin.command:
+        cmd: dpkg -s hailo-h10-all
+      register: hailo_pkg
+      changed_when: false
+      failed_when: hailo_pkg.rc != 0

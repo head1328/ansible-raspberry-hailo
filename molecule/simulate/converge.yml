@@ -1,0 +1,27 @@
+---
+- name: Simulate installation of all Hailo variants
+  hosts: all
+  become: true
+  gather_facts: true
+  check_mode: true
+
+  tasks:
+    - name: "Simulate install: hailo-h10-all (Hailo-10H)"
+      ansible.builtin.apt:
+        name: hailo-h10-all
+        state: present
+        update_cache: true
+      register: h10_result
+
+    - name: "Simulate install: hailo-all (Hailo-8 / Hailo-8L)"
+      ansible.builtin.apt:
+        name: hailo-all
+        state: present
+        update_cache: true
+      register: h8_result
+
+    - name: Report simulation results
+      ansible.builtin.debug:
+        msg:
+          - "hailo-h10-all: {{ 'would install' if h10_result is changed else 'already present' }}"
+          - "hailo-all: {{ 'would install' if h8_result is changed else 'already present' }}"
