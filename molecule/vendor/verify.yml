@@ -1,0 +1,20 @@
+---
+- name: Verify (vendor)
+  hosts: all
+  become: false
+  gather_facts: true
+
+  tasks:
+    - name: Verify hailort is installed
+      ansible.builtin.command:
+        cmd: dpkg -s hailort
+      register: hailort_pkg
+      changed_when: false
+      failed_when: hailort_pkg.rc != 0
+
+    - name: Verify hailort version is 5.3.0
+      ansible.builtin.command:
+        cmd: dpkg-query -W -f='${Version}' hailort
+      register: hailort_version
+      changed_when: false
+      failed_when: hailort_version.stdout != '5.3.0'

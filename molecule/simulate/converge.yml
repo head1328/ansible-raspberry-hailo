@@ -20,8 +20,34 @@
         update_cache: true
       register: h8_result
 
-    - name: Report simulation results
+    - name: Report raspberry simulation results
       ansible.builtin.debug:
         msg:
-          - "hailo-h10-all: {{ 'would install' if h10_result is changed else 'already present' }}"
-          - "hailo-all: {{ 'would install' if h8_result is changed else 'already present' }}"
+          - "hailo-h10-all: {{ 'available' if h10_result is not failed else 'NOT available' }}"
+          - "hailo-all: {{ 'available' if h8_result is not failed else 'NOT available' }}"
+
+- name: Verify vendor package URLs are reachable
+  hosts: all
+  become: false
+  gather_facts: false
+
+  tasks:
+    - name: Check hailort vendor URL
+      ansible.builtin.uri:
+        url: "https://dev-public.hailo.ai/2026_04/Hailo10/hailort_5.3.0_arm64.deb"
+        method: HEAD
+      register: hailort_url
+      failed_when: hailort_url.status != 200
+
+    - name: Check hailort-pcie-driver vendor URL
+      ansible.builtin.uri:
+        url: "https://dev-public.hailo.ai/2026_04/Hailo10/hailort-pcie-driver_5.3.0_all.deb"
+        method: HEAD
+      register: pcie_url
+      failed_when: pcie_url.status != 200
+
+    - name: Report vendor simulation results
+      ansible.builtin.debug:
+        msg:
+          - "hailort 5.3.0: reachable"
+          - "hailort-pcie-driver 5.3.0: reachable"
