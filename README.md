@@ -48,6 +48,19 @@ ls /dev/hailo0
 hailortcli fw-control identify
 ```
 
+## Local Development
+
+Symlink the role into your local Ansible roles path for
+development without reinstalling:
+
+```bash
+make symlink
+```
+
+This creates a symlink at `~/.ansible/roles/head1328.hailo`
+pointing to the working directory. Changes are immediately
+available to playbooks.
+
 ## Testing
 
 Tests require a Raspberry Pi with the Hailo hardware and the Raspberry Pi apt repository configured. The target host is configured via environment variables:

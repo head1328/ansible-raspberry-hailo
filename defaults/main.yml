@@ -2,3 +2,10 @@
 
 # Hailo device variant: "h8l", "h8", or "h10"
 hailo_variant: h10
+
+# Installation source: "raspberry" or "vendor"
+# raspberry: install from Raspberry Pi apt repository
+# vendor: install from Hailo directly (dev-public.hailo.ai)
+hailo_source: raspberry
+hailo_vendor_version: "5.3.0"
+hailo_vendor_base_url: "https://dev-public.hailo.ai/2026_04/Hailo10"

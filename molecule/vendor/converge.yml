@@ -1,0 +1,13 @@
+---
+- name: Converge (vendor)
+  hosts: all
+  become: true
+  gather_facts: true
+
+  vars:
+    hailo_variant: h10
+    hailo_source: vendor
+
+  roles:
+    - role: ansible-raspberry-hailo
+      tags: hailo

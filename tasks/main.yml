@@ -1,12 +1,125 @@
 ---
 
-- name: Install Hailo metapackage
+- name: Remove vendor packages before Raspberry Pi install
+  when: hailo_source == "raspberry"
+  block:
+    - name: Remove vendor GenAI Model Zoo if present
+      ansible.builtin.command:
+        cmd: dpkg --force-all --purge hailo-gen-ai-model-zoo
+      register: _hailo_zoo_remove
+      changed_when: "'Removing' in _hailo_zoo_remove.stdout"
+      failed_when:
+        - _hailo_zoo_remove.rc != 0
+        - "'is not installed' not in _hailo_zoo_remove.stderr"
+
+    - name: Remove vendor Hailo packages
+      ansible.builtin.command:
+        cmd: dpkg --force-all --purge {{ item }}
+      loop:
+        - hailort-pcie-driver
+        - hailort
+      register: _hailo_vendor_remove
+      changed_when: "'Removing' in _hailo_vendor_remove.stdout"
+      failed_when:
+        - _hailo_vendor_remove.rc != 0
+        - "'is not installed' not in _hailo_vendor_remove.stderr"
+
+- name: Fix broken apt state before Raspberry Pi install
+  when: hailo_source == "raspberry"
+  ansible.builtin.command:
+    cmd: apt --fix-broken install -y
+  changed_when: false
+  failed_when: false
+
+- name: Install Hailo from Raspberry Pi repository
+  when: hailo_source == "raspberry"
   ansible.builtin.apt:
     name: "{{ hailo_package }}"
     state: present
     update_cache: true
-    cache_valid_time: 86400
   notify: Reboot for Hailo
+
+- name: Remove Raspberry Pi packages before vendor install
+  when: hailo_source == "vendor"
+  block:
+    - name: Remove Raspberry Pi GenAI Model Zoo if present
+      ansible.builtin.command:
+        cmd: dpkg --force-all --purge hailo-gen-ai-model-zoo
+      register: _hailo_zoo_remove2
+      changed_when: "'Removing' in _hailo_zoo_remove2.stdout"
+      failed_when:
+        - _hailo_zoo_remove2.rc != 0
+        - "'is not installed' not in _hailo_zoo_remove2.stderr"
+
+    - name: Remove Raspberry Pi Hailo metapackage
+      ansible.builtin.apt:
+        name: hailo-h10-all
+        state: absent
+
+    - name: Remove Raspberry Pi Hailo packages
+      ansible.builtin.command:
+        cmd: dpkg --force-all --purge {{ item }}
+      loop:
+        - python3-h10-hailort
+        - h10-hailort-pcie-driver
+        - h10-hailort
+      register: _hailo_remove
+      changed_when: "'Removing' in _hailo_remove.stdout"
+      failed_when:
+        - _hailo_remove.rc != 0
+        - "'is not installed' not in _hailo_remove.stderr"
+
+- name: Check installed hailort version
+  when: hailo_source == "vendor"
+  ansible.builtin.command:
+    cmd: dpkg-query -W -f='${Version}' hailort
+  register: _hailort_current
+  changed_when: false
+  failed_when: false
+
+- name: Install Hailo from vendor packages
+  when:
+    - hailo_source == "vendor"
+    - _hailort_current.rc != 0 or _hailort_current.stdout != hailo_vendor_version
+  block:
+    - name: Download hailort package
+      ansible.builtin.get_url:
+        url: "{{ hailo_vendor_base_url }}/hailort_{{ hailo_vendor_version }}_arm64.deb"
+        dest: "/tmp/hailort_{{ hailo_vendor_version }}_arm64.deb"
+        mode: '0644'
+
+    - name: Download hailort-pcie-driver package
+      ansible.builtin.get_url:
+        url: "{{ hailo_vendor_base_url }}/hailort-pcie-driver_{{ hailo_vendor_version }}_all.deb"
+        dest: "/tmp/hailort-pcie-driver_{{ hailo_vendor_version }}_all.deb"
+        mode: '0644'
+
+    - name: Install hailort package
+      ansible.builtin.command:
+        cmd: "dpkg -i /tmp/hailort_{{ hailo_vendor_version }}_arm64.deb"
+      register: _hailort_install
+      changed_when: "'Unpacking hailort' in _hailort_install.stdout"
+
+    - name: Install hailort-pcie-driver package
+      ansible.builtin.command:
+        cmd: "dpkg -i /tmp/hailort-pcie-driver_{{ hailo_vendor_version }}_all.deb"
+      register: _hailort_pcie_install
+      changed_when: "'Unpacking hailort-pcie-driver' in _hailort_pcie_install.stdout"
+      notify: Reboot for Hailo
+
+    - name: Remove downloaded packages
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/tmp/hailort_{{ hailo_vendor_version }}_arm64.deb"
+        - "/tmp/hailort-pcie-driver_{{ hailo_vendor_version }}_all.deb"
+
+    - name: Fix broken apt state after vendor install
+      ansible.builtin.command:
+        cmd: dpkg --configure -a --force-depends
+      changed_when: false
+      failed_when: false
 
 - name: Verify Hailo device is present
   ansible.builtin.stat:
